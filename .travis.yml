@@ -1,0 +1,30 @@
+
+sudo: required
+services:
+  - docker
+language: rust
+rust:
+  - "1.26.2"
+  - stable
+  - beta
+  - nightly
+matrix:
+  allow_failures:
+    - rust: nightly
+
+after_success:
+  - |
+    # for only one version in the build matrix
+    if [[ $TRAVIS_RUST_VERSION == "1.26.2" ]]; then
+      # if we're on a master non-PR, deploy as latest
+      if [[ ( $TRAVIS_BRANCH == "master" ) && ( $TRAVIS_PULL_REQUEST == "false" ) ]]; then
+        ./scripts/deploy-master.sh || exit 1
+      # if we're a tag, build to hub only
+      elif [ -n "${TRAVIS_TAG}" ]; then
+        ./scripts/deploy-tag.sh || exit 1
+      fi
+    fi
+notifications:
+  email: false
+cache: cargo
+
