@@ -91,9 +91,7 @@ fn response_examples(
 
             let mut url_workflows =
                 Url::parse("https://api.clubhouse.io/api/v2/workflows").unwrap();
-            url_workflows
-                .query_pairs_mut()
-                .append_pair("token", &config.clubhouse_api_token);
+            config.authorize_clubhouse_url(&mut url_workflows);
 
             let get_workflows = client
                 .get(url_workflows.as_str().parse().unwrap())
@@ -113,9 +111,7 @@ fn response_examples(
                 let stream_stories = stream::iter_ok(story_ids)
                     .map(move |story_id: String| {
                         let mut url_story = url_stories.clone().join(&story_id).unwrap();
-                        url_story
-                            .query_pairs_mut()
-                            .append_pair("token", &futures_config.clubhouse_api_token);
+                        &futures_config.authorize_clubhouse_url(&mut url_story);
                         futures_client
                             .get(url_story.as_str().parse().unwrap())
                             .and_then(|res| {
