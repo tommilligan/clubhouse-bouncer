@@ -31,6 +31,10 @@ fn env_var_required(key: &str) -> String {
     env::var(key).expect(&format!("Missing env var {}", key))
 }
 
+fn stream_as_string(stream: hyper::Chunk) -> String {
+    String::from_utf8(stream.to_vec()).expect("Invalid body string")
+}
+
 fn response_examples(
     req: Request<Body>,
     client: &Client<HttpsConnector<HttpConnector>>,
@@ -43,8 +47,7 @@ fn response_examples(
             req.into_body()
                 .concat2()
                 .and_then(|stream| {
-                    let body = String::from_utf8(stream.to_vec()).expect("Invalid string body");
-                    warn!("Got body; {}", &body);
+                    let body = stream_as_string(stream);
                     let q: QueryDeployable =
                         serde_json::from_str(&body).expect("Invalid tickets JSON");
                     let a: String = serde_json::to_string(&q).expect("Error serializing to JSON");
