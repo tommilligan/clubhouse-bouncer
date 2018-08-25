@@ -7,7 +7,7 @@ use url::Url;
 /// Central app configuration and helper methods are stored here
 pub struct BouncerConfig {
     /// Incoming authorization for clubhouse-bouncer requests
-    pub bouncer_credentials: String,
+    pub bouncer_credentials: Vec<String>,
     /// Outgoing authorization for Clubhouse API requests
     pub clubhouse_api_token: String,
 }
@@ -31,7 +31,7 @@ impl BouncerConfig {
     pub fn validate_bouncer_authorization(&self, req: &hyper::Request<hyper::Body>) -> bool {
         let auth = req.headers().get(hyper::header::AUTHORIZATION);
         match auth {
-            Some(a) => a == &self.bouncer_credentials,
+            Some(a) => self.bouncer_credentials.iter().any(|cred| cred == a),
             None => false,
         }
     }

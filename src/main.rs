@@ -52,7 +52,10 @@ fn main() {
 
     // Calculate static config to pass down to workers
     let bouncer_config = BouncerConfig {
-        bouncer_credentials: env_var_required("BOUNCER_CREDENTIALS"),
+        bouncer_credentials: env_var_required("BOUNCER_CREDENTIALS")
+            .split(",")
+            .map(|s| s.to_owned())
+            .collect(),
         clubhouse_api_token: env_var_required("CLUBHOUSE_API_TOKEN"),
     };
 
