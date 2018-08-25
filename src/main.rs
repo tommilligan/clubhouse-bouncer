@@ -91,16 +91,16 @@ fn response_examples(
                 .append_pair("token", &config.clubhouse_api_token);
             info!("{}", url_stories.as_str());
 
-            let get_stories = client
-                .get(url_stories.as_str().parse().unwrap())
-                .and_then(|res| {
-                    trace!("clubhouse response: {}", res.status());
-                    res.into_body().concat2().and_then(|stream| {
-                        future::ok(serde_json::from_slice::<Story>(&stream).unwrap())
-                    })
-                });
-
-            let res = get_stories.and_then(|s| {
+            let futures_client = client.clone();
+            let deployable = get_workflows.join(get_story_ids).and_then(move |s| {
+                futures_client
+                    .get(url_stories.as_str().parse().unwrap())
+                    .and_then(|res| {
+                        trace!("clubhouse response: {}", res.status());
+                        res.into_body().concat2().and_then(|stream| {
+                            future::ok(serde_json::from_slice::<Story>(&stream).unwrap())
+                        })
+                    });
                 let b = serde_json::to_string(&s).unwrap();
                 future::ok(
                     Response::builder()
@@ -110,7 +110,7 @@ fn response_examples(
                 )
             });
 
-            Box::new(res)
+            Box::new(deployable)
         }
         _ => {
             // Return 404 not found response.
