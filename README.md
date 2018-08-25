@@ -23,3 +23,11 @@ cargo install cargo-watch
 cargo watch -x run
 ```
 
+## Test commands
+
+An example use of the app might be to test whether a series of tickets are deployable, such as:
+
+```
+curl -X GET localhost:2686/deployable -d '{"story_ids":["9812", "9813"]}' | jq '.' 
+```
+

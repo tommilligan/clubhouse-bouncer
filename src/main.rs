@@ -11,7 +11,7 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate url;
 
-use futures::{future, Future, Stream};
+use futures::{future, stream, Future, Stream};
 
 use hyper::client::HttpConnector;
 use hyper::service::service_fn;
@@ -82,34 +82,41 @@ fn response_examples(
                     })
                 });
 
-            let mut url_stories = Url::parse("https://api.clubhouse.io/api/v2/stories/")
-                .unwrap()
-                .join("9812")
-                .unwrap();
-            url_stories
-                .query_pairs_mut()
-                .append_pair("token", &config.clubhouse_api_token);
-            info!("{}", url_stories.as_str());
+            let url_stories = Url::parse("https://api.clubhouse.io/api/v2/stories/").unwrap();
 
+            // TODO do we need to clone here?
             let futures_client = client.clone();
-            let deployable = get_workflows.join(get_story_ids).and_then(move |s| {
-                futures_client
-                    .get(url_stories.as_str().parse().unwrap())
-                    .and_then(|res| {
-                        trace!("clubhouse response: {}", res.status());
-                        res.into_body().concat2().and_then(|stream| {
-                            future::ok(serde_json::from_slice::<Story>(&stream).unwrap())
-                        })
-                    });
-                let b = serde_json::to_string(&s).unwrap();
-                future::ok(
-                    Response::builder()
-                        .header(header::CONTENT_TYPE, "application/json")
-                        .body(Body::from(b))
-                        .unwrap(),
-                )
+            let futures_config = config.clone();
+            let deployable = get_story_ids.and_then(move |story_ids| {
+                let stream_stories = stream::iter_ok(story_ids)
+                    .map(move |story_id: String| {
+                        let mut url_story = url_stories.clone().join(&story_id).unwrap();
+                        url_story
+                            .query_pairs_mut()
+                            .append_pair("token", &futures_config.clubhouse_api_token);
+                        futures_client
+                            .get(url_story.as_str().parse().unwrap())
+                            .and_then(|res| {
+                                trace!("clubhouse response: {}", res.status());
+                                res.into_body().concat2().and_then(|stream| {
+                                    let story = serde_json::from_slice::<Story>(&stream).unwrap();
+                                    Ok(story)
+                                })
+                            })
+                    })
+                    .collect();
+                stream_stories.and_then(|get_stories_data| {
+                    future::join_all(get_stories_data).and_then(|stories_data| {
+                        let b = serde_json::to_string(&stories_data).unwrap();
+                        future::ok(
+                            Response::builder()
+                                .header(header::CONTENT_TYPE, "application/json")
+                                .body(Body::from(b))
+                                .unwrap(),
+                        )
+                    })
+                })
             });
-
             Box::new(deployable)
         }
         _ => {
