@@ -3,4 +3,5 @@
 **/*.rs.bk
 .env
 *.json
+rls
 
