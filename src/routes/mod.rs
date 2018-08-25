@@ -49,7 +49,7 @@ pub fn deployable(
     client: &Client<HttpsConnector<HttpConnector>>,
     config: &BouncerConfig,
 ) -> Box<Future<Item = Response<Body>, Error = hyper::Error> + Send> {
-    trace!("Started deployable")
+    trace!("Started deployable");
     let get_story_ids = req.into_body().concat2().and_then(|stream| {
         let q: QueryDeployable = serde_json::from_slice(&stream).expect("Invalid tickets JSON");
         warn!("{:?}", q);
