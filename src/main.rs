@@ -26,6 +26,20 @@ struct QueryDeployable {
     story_ids: Vec<String>,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+struct WorkflowState {
+    description: String,
+    id: u64,
+    name: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Workflow {
+    id: u64,
+    name: String,
+    states: Vec<WorkflowState>,
+}
+
 fn env_var_required(key: &str) -> String {
     trace!("Loading env var {}", key);
     env::var(key).expect(&format!("Missing env var {}", key))
@@ -49,7 +63,7 @@ fn response_examples(
                 future::ok(q)
             });
 
-            let data = client
+            let get_workflows = client
                 .get(
                     format!(
                         "https://api.clubhouse.io/api/v2/workflows?token={token}",
@@ -57,19 +71,27 @@ fn response_examples(
                     ).parse()
                         .unwrap(),
                 )
-                .map(|res| {
-                    warn!("Response: {}", res.status());
-                    res.status()
+                .and_then(|res| {
+                    trace!("clubhouse esponse: {}", res.status());
+                    res.into_body().concat2().and_then(|stream| {
+                        let body = stream_as_string(stream);
+                        future::ok(serde_json::from_str::<Vec<Workflow>>(&body).unwrap())
+                    })
                 });
 
             // let a: String = serde_json::to_string(&q).expect("Error serializing to JSON");
-            let a = String::from("spam");
-            Box::new(future::ok(
-                Response::builder()
-                    .header(header::CONTENT_TYPE, "application/json")
-                    .body(Body::from(a))
-                    .unwrap(),
-            ))
+            // let a = future::ok(String::from("spam"));
+            let res = get_workflows.and_then(|s| {
+                let b = serde_json::to_string(&s).unwrap();
+                future::ok(
+                    Response::builder()
+                        .header(header::CONTENT_TYPE, "application/json")
+                        .body(Body::from(b))
+                        .unwrap(),
+                )
+            });
+
+            Box::new(res)
         }
         _ => {
             // Return 404 not found response.
