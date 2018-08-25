@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::env;
 
 extern crate futures;
@@ -27,11 +28,18 @@ struct QueryDeployable {
     story_ids: Vec<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 struct WorkflowState {
     description: String,
     id: u64,
     name: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct StoryState {
+    deployable: bool,
+    story: Story,
+    state: WorkflowState,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -41,11 +49,17 @@ struct Workflow {
     states: Vec<WorkflowState>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 struct Story {
     id: u64,
     name: String,
     workflow_state_id: u64,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Deployable {
+    deployable: bool,
+    story_states: Vec<StoryState>,
 }
 
 fn env_var_required(key: &str) -> String {
@@ -106,15 +120,48 @@ fn response_examples(
                     })
                     .collect();
                 stream_stories.and_then(|get_stories_data| {
-                    future::join_all(get_stories_data).and_then(|stories_data| {
-                        let b = serde_json::to_string(&stories_data).unwrap();
-                        future::ok(
-                            Response::builder()
-                                .header(header::CONTENT_TYPE, "application/json")
-                                .body(Body::from(b))
-                                .unwrap(),
-                        )
-                    })
+                    future::join_all(get_stories_data)
+                        .join(get_workflows)
+                        .and_then(|(stories_data, workflows)| {
+                            let mut workflow_lookup: HashMap<
+                                u64,
+                                WorkflowState,
+                            > = HashMap::new();
+                            for workflow in workflows.into_iter() {
+                                for state in workflow.states.into_iter() {
+                                    workflow_lookup.insert(state.id, state);
+                                }
+                            }
+
+                            let story_states: Vec<StoryState> = stories_data
+                                .into_iter()
+                                .map(|story| {
+                                    let state = workflow_lookup
+                                        .get(&story.workflow_state_id)
+                                        .unwrap()
+                                        .to_owned();
+                                    StoryState {
+                                        deployable: state.name == "Completed",
+                                        state: state,
+                                        story: story,
+                                    }
+                                })
+                                .collect();
+
+                            let deployable = Deployable {
+                                deployable: story_states
+                                    .iter()
+                                    .all(|story_state| story_state.deployable),
+                                story_states: story_states,
+                            };
+
+                            future::ok(
+                                Response::builder()
+                                    .header(header::CONTENT_TYPE, "application/json")
+                                    .body(Body::from(serde_json::to_string(&deployable).unwrap()))
+                                    .unwrap(),
+                            )
+                        })
                 })
             });
             Box::new(deployable)
