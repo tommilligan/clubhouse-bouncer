@@ -22,6 +22,11 @@ use hyper_tls::HttpsConnector;
 use url::Url;
 
 static NOTFOUND: &[u8] = b"Not Found";
+static DEPLOYABLE: [&str; 2] = ["Ready for Deploy", "Completed"];
+
+fn is_deployable(description: &str) -> bool {
+    DEPLOYABLE.iter().any(|s| s == &description)
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 struct QueryDeployable {
@@ -30,7 +35,6 @@ struct QueryDeployable {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct WorkflowState {
-    description: String,
     id: u64,
     name: String,
 }
@@ -141,7 +145,7 @@ fn response_examples(
                                         .unwrap()
                                         .to_owned();
                                     StoryState {
-                                        deployable: state.name == "Completed",
+                                        deployable: is_deployable(&state.name),
                                         state: state,
                                         story: story,
                                     }
