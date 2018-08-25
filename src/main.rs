@@ -18,8 +18,6 @@ use hyper::{header, Body, Client, Method, Request, Response, Server, StatusCode}
 use hyper_tls::HttpsConnector;
 
 static NOTFOUND: &[u8] = b"Not Found";
-static CLUBHOUSE_URL_WORKFLOWS: &str = "https://api.clubhouse.io/api/v2/workflows?token={token}";
-static CLUBHOUSE_URL_STORY: &str = "http://127.0.0.1:1337/web_api";
 
 #[derive(Serialize, Deserialize, Debug)]
 struct QueryDeployable {
@@ -45,10 +43,6 @@ fn env_var_required(key: &str) -> String {
     env::var(key).expect(&format!("Missing env var {}", key))
 }
 
-fn stream_as_string(stream: hyper::Chunk) -> String {
-    String::from_utf8(stream.to_vec()).expect("Invalid body string")
-}
-
 fn response_examples(
     req: Request<Body>,
     client: &Client<HttpsConnector<HttpConnector>>,
@@ -57,8 +51,8 @@ fn response_examples(
     match (req.method(), req.uri().path()) {
         (&Method::GET, "/deployable") => {
             let q = req.into_body().concat2().and_then(|stream| {
-                let body = stream_as_string(stream);
-                let q: QueryDeployable = serde_json::from_str(&body).expect("Invalid tickets JSON");
+                let q: QueryDeployable =
+                    serde_json::from_slice(&stream).expect("Invalid tickets JSON");
                 warn!("{:?}", q);
                 future::ok(q)
             });
@@ -74,13 +68,10 @@ fn response_examples(
                 .and_then(|res| {
                     trace!("clubhouse esponse: {}", res.status());
                     res.into_body().concat2().and_then(|stream| {
-                        let body = stream_as_string(stream);
-                        future::ok(serde_json::from_str::<Vec<Workflow>>(&body).unwrap())
+                        future::ok(serde_json::from_slice::<Vec<Workflow>>(&stream).unwrap())
                     })
                 });
 
-            // let a: String = serde_json::to_string(&q).expect("Error serializing to JSON");
-            // let a = future::ok(String::from("spam"));
             let res = get_workflows.and_then(|s| {
                 let b = serde_json::to_string(&s).unwrap();
                 future::ok(
