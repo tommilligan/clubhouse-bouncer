@@ -31,6 +31,13 @@ fn env_var_required(key: &str) -> String {
     env::var(key).expect(&format!("Missing env var {}", key))
 }
 
+fn unpack_json_response(r: Request<Body>) {
+    r.into_body().concat2().and_then(|stream| {
+        let body = String::from_utf8(stream.to_vec()).expect("Invalid application/json string body");
+        serde_json::from_str(&body).unwrap()
+    })
+}
+
 fn response_examples(req: Request<Body>, client: &Client<HttpsConnector<HttpConnector>>, config: &BouncerConfig)
     -> Box<Future<Item=Response<Body>, Error=hyper::Error> + Send>
 {
@@ -45,6 +52,24 @@ fn response_examples(req: Request<Body>, client: &Client<HttpsConnector<HttpConn
                 let q: QueryDeployable = serde_json::from_str(&body).expect("Invalid tickets JSON");
                 let a: String = serde_json::to_string(&q).expect("Error serializing to JSON");
 
+            // // build the request
+            // let req = Request::builder()
+            //     .method(Method::GET)
+            //     .uri(CLUBHOUSE_URL_WORKFLOWS)
+            //     .unwrap();
+            // // use the request with client
+            // let web_res_future = client.request(req);
+
+            // Box::new(web_res_future.map(|web_res| {
+            //     // return the response that came from the web api and the original text together
+            //     // to show the difference
+            //     let body = Body::wrap_stream(web_res.into_body().map(|b| {
+            //         Chunk::from(format!("<b>before</b>: {}<br><b>after</b>: {}",
+            //                             std::str::from_utf8(LOWERCASE).unwrap(),
+            //                             std::str::from_utf8(&b).unwrap()))
+            //     }));
+
+            //     Response::new(body)
                 future::ok(Response::builder()
                     .header(header::CONTENT_TYPE, "application/json")
                     .body(Body::from(a))
