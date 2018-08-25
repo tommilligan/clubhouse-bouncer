@@ -21,6 +21,10 @@ use hyper_tls::HttpsConnector;
 
 use url::Url;
 
+mod config;
+
+use config::BouncerConfig;
+
 static NOTFOUND: &[u8] = b"Not Found";
 static DEPLOYABLE: [&str; 2] = ["Ready for Deploy", "Completed"];
 
@@ -181,12 +185,6 @@ fn response_examples(
             ))
         }
     }
-}
-
-#[derive(Debug, Clone)]
-struct BouncerConfig {
-    bouncer_credentials: String,
-    clubhouse_api_token: String,
 }
 
 fn main() {
