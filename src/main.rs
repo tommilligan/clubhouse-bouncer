@@ -213,7 +213,6 @@ fn main() {
             .map_err(|e| error!("server error: {}", e));
 
         warn!("clubhouse-bouncer ready on http://{}", addr);
-
         server
     }));
 }
