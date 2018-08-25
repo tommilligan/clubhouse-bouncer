@@ -42,24 +42,34 @@ fn response_examples(
 ) -> Box<Future<Item = Response<Body>, Error = hyper::Error> + Send> {
     match (req.method(), req.uri().path()) {
         (&Method::GET, "/deployable") => {
-            warn!("{}", &config.bouncer_credentials);
+            let q = req.into_body().concat2().and_then(|stream| {
+                let body = stream_as_string(stream);
+                let q: QueryDeployable = serde_json::from_str(&body).expect("Invalid tickets JSON");
+                warn!("{:?}", q);
+                future::ok(q)
+            });
 
-            req.into_body()
-                .concat2()
-                .and_then(|stream| {
-                    let body = stream_as_string(stream);
-                    let q: QueryDeployable =
-                        serde_json::from_str(&body).expect("Invalid tickets JSON");
-                    let a: String = serde_json::to_string(&q).expect("Error serializing to JSON");
+            let data = client
+                .get(
+                    format!(
+                        "https://api.clubhouse.io/api/v2/workflows?token={token}",
+                        token = config.clubhouse_api_token
+                    ).parse()
+                        .unwrap(),
+                )
+                .map(|res| {
+                    warn!("Response: {}", res.status());
+                    res.status()
+                });
 
-                    future::ok(
-                        Response::builder()
-                            .header(header::CONTENT_TYPE, "application/json")
-                            .body(Body::from(a))
-                            .unwrap(),
-                    )
-                })
-                .boxed()
+            // let a: String = serde_json::to_string(&q).expect("Error serializing to JSON");
+            let a = String::from("spam");
+            Box::new(future::ok(
+                Response::builder()
+                    .header(header::CONTENT_TYPE, "application/json")
+                    .body(Body::from(a))
+                    .unwrap(),
+            ))
         }
         _ => {
             // Return 404 not found response.
