@@ -23,6 +23,7 @@ static NOTFOUND: &[u8] = b"Not Found";
 static UNAUTHORIZED: &[u8] = b"Unauthorized";
 
 pub fn not_found() -> Box<Future<Item = Response<Body>, Error = hyper::Error> + Send> {
+    warn!("404 Not Found");
     // Return 404 not found response.
     let body = Body::from(NOTFOUND);
     Box::new(future::ok(
@@ -34,6 +35,7 @@ pub fn not_found() -> Box<Future<Item = Response<Body>, Error = hyper::Error> + 
 }
 
 pub fn unauthorized() -> Box<Future<Item = Response<Body>, Error = hyper::Error> + Send> {
+    warn!("401 Unauthorized");
     Box::new(future::ok(
         Response::builder()
             .status(StatusCode::UNAUTHORIZED)
@@ -47,6 +49,7 @@ pub fn deployable(
     client: &Client<HttpsConnector<HttpConnector>>,
     config: &BouncerConfig,
 ) -> Box<Future<Item = Response<Body>, Error = hyper::Error> + Send> {
+    trace!("Started deployable")
     let get_story_ids = req.into_body().concat2().and_then(|stream| {
         let q: QueryDeployable = serde_json::from_slice(&stream).expect("Invalid tickets JSON");
         warn!("{:?}", q);
