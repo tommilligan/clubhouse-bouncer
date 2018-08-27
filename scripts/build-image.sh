@@ -1,7 +1,7 @@
 #!/bin/sh
 set -ev
 
-function build_refresh () {
+build_refresh () {
   # update image repo/image:<tag> from Dockerfile.<tag>
   DOCKER_IMAGE="$1:$2"
   docker pull "${DOCKER_IMAGE}"
