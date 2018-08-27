@@ -6,7 +6,6 @@ build_refresh () {
   DOCKER_IMAGE="$1:$2"
   docker pull "${DOCKER_IMAGE}"
   docker build --cache-from "${DOCKER_IMAGE}" -f "Dockerfile.$2" -t "${DOCKER_IMAGE}" .
-  docker push "${DOCKER_IMAGE}"
 }
 
 # pull and refresh build base/builder

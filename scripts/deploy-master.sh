@@ -3,6 +3,8 @@ set -ev
 
 # Push to DockerHub
 docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
+docker push "${DOCKER_REPO}:base"
+docker push "${DOCKER_REPO}:builder"
 docker push "${DOCKER_REPO}"
 
 # Deploy to Heroku
