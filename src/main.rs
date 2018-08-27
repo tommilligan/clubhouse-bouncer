@@ -52,7 +52,9 @@ fn main() {
     pretty_env_logger::init();
 
     let port: String = env::var("PORT").unwrap_or(String::from("2686"));
-    let addr = format!("127.0.0.1:{}", &port).parse().unwrap();
+    let addr = format!("0.0.0.0:{}", &port)
+        .parse()
+        .expect("Invalid server binding address");
 
     // Calculate static config to pass down to workers
     let bouncer_config = BouncerConfig {
@@ -65,7 +67,7 @@ fn main() {
 
     hyper::rt::run(future::lazy(move || {
         // 4 is number of blocking threads for DNS
-        let https = HttpsConnector::new(4).unwrap();
+        let https = HttpsConnector::new(4).expect("Failed to generate https connector");
         // Share a `Client` with all `Service`s
         let client = Client::builder().build::<_, hyper::Body>(https);
 
