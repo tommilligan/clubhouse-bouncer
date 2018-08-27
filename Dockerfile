@@ -2,7 +2,7 @@
 FROM tommilligan/clubhouse-bouncer:builder as builder
 
 # replace with project source and build
-RUN rm -rf ./src
+RUN rm -rf ./src ./target
 COPY ./src ./src
 RUN cargo build --release
 
