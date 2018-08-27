@@ -21,6 +21,7 @@ use config::BouncerConfig;
 
 static NOTFOUND: &[u8] = b"Not Found";
 static UNAUTHORIZED: &[u8] = b"Unauthorized";
+static INTERNALSERVERERROR: &[u8] = b"Internal Server Error";
 
 pub fn not_found() -> Box<Future<Item = Response<Body>, Error = hyper::Error> + Send> {
     warn!("404 Not Found");
@@ -42,6 +43,14 @@ pub fn unauthorized() -> Box<Future<Item = Response<Body>, Error = hyper::Error>
             .body(Body::from(UNAUTHORIZED))
             .unwrap(),
     ))
+}
+
+pub fn internal_server_error() -> Response<Body> {
+    warn!("500 Internal Server Error");
+    Response::builder()
+        .status(StatusCode::INTERNAL_SERVER_ERROR)
+        .body(Body::from(INTERNALSERVERERROR))
+        .unwrap()
 }
 
 pub fn deployable(

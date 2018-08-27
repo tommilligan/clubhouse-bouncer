@@ -33,15 +33,19 @@ fn worker(
     req: Request<Body>,
     client: &Client<HttpsConnector<HttpConnector>>,
     config: &BouncerConfig,
-) -> Box<Future<Item = Response<Body>, Error = hyper::Error> + Send> {
-    if config.validate_bouncer_authorization(&req) {
+) -> impl Future<Item = Response<Body>, Error = hyper::Error> {
+    let res = if config.validate_bouncer_authorization(&req) {
         match (req.method(), req.uri().path()) {
             (&Method::GET, "/deployable") => routes::deployable(req, client, config),
             _ => routes::not_found(),
         }
     } else {
         routes::unauthorized()
-    }
+    };
+    res.or_else(|err| {
+        error!("{:?}", err);
+        future::ok(routes::internal_server_error())
+    })
 }
 
 fn main() {
