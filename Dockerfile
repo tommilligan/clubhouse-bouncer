@@ -1,12 +1,5 @@
-FROM frolvlad/alpine-rust as builder
-
-RUN apk add --no-cache libressl libressl-dev
-
-# cache our dependencies
-RUN USER=root cargo new --bin repo
-WORKDIR /repo
-COPY ./Cargo.lock ./Cargo.toml ./
-RUN cargo build --release
+# cached and compiled dependencies
+FROM tommilligan/clubhouse-bouncer:builder as builder
 
 # replace with project source and build
 RUN rm -rf ./src
