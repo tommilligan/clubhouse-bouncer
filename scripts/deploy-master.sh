@@ -1,13 +1,9 @@
 #!/bin/sh
 set -ev
 
-# Build image
-docker build -t app .
-
 # Push to DockerHub
 docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
-docker tag app tommilligan/clubhouse-bouncer
-docker push tommilligan/clubhouse-bouncer
+docker push "${DOCKER_REPO}"
 
 # Deploy to Heroku
 curl https://cli-assets.heroku.com/install.sh | sh
