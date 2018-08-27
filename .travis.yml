@@ -14,15 +14,21 @@ matrix:
 script: cargo test --verbose
 after_success:
   - |
+    # Give travis a chance to finish logging properly
+    exit_slowly() {
+      sleep 10
+      exit 1
+    }
+
     # for only one version in the build matrix
     if [[ $TRAVIS_RUST_VERSION == "1.26.2" ]]; then
-      ./scripts/build-image.sh
+      ./scripts/build-image.sh || exit_slowly
       # if we're on a master non-PR, deploy as latest
       if [[ ( $TRAVIS_BRANCH == "master" ) && ( $TRAVIS_PULL_REQUEST == "false" ) ]]; then
-        ./scripts/deploy-master.sh || exit 1
+        ./scripts/deploy-master.sh || exit_slowly
       # if we're a tag, build to hub only
       elif [ -n "${TRAVIS_TAG}" ]; then
-        ./scripts/deploy-tag.sh || exit 1
+        ./scripts/deploy-tag.sh || exit_slowly
       fi
     fi
 notifications:
