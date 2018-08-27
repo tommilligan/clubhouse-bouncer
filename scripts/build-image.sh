@@ -2,5 +2,5 @@
 set -ev
 
 # build image
-docker pull "${SOCKER_REPO}"
+docker pull "${DOCKER_REPO}"
 docker build --cache-from "${DOCKER_REPO}" -t "${DOCKER_REPO}" . 
