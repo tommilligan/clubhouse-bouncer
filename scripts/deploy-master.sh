@@ -10,10 +10,10 @@ docker tag app tommilligan/clubhouse-bouncer
 docker push tommilligan/clubhouse-bouncer
 
 # Deploy to Heroku
-# curl https://cli-assets.heroku.com/install.sh | sh
-# heroku --version
-# heroku container:login
-# docker tag app registry.heroku.com/clubhouse-bouncer/web
-# docker push registry.heroku.com/clubhouse-bouncer/web
-# heroku container:release -a clubhouse-bouncer web
+curl https://cli-assets.heroku.com/install.sh | sh
+heroku --version
+heroku container:login
+docker tag app registry.heroku.com/clubhouse-bouncer/web
+docker push registry.heroku.com/clubhouse-bouncer/web
+heroku container:release -a clubhouse-bouncer web
 
