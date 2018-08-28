@@ -14,6 +14,5 @@ build_refresh "${DOCKER_REPO}" "base"
 build_refresh "${DOCKER_REPO}" "builder"
 
 # build actual image
-docker pull "${DOCKER_REPO}"
-docker build --cache-from "${DOCKER_REPO}" -t "${DOCKER_REPO}" . 
+docker build -t "${DOCKER_REPO}" .
 

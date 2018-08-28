@@ -2,8 +2,9 @@
 FROM tommilligan/clubhouse-bouncer:builder as builder
 
 # replace with project source and build
-RUN rm -rf ./src ./target
+RUN rm -rf ./src
 COPY ./src ./src
+RUN touch src/main.rs
 RUN cargo build --release
 
 # runtime image
