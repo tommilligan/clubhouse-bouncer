@@ -52,7 +52,8 @@ fn main() {
     pretty_env_logger::init();
 
     let port: String = env::var("PORT").unwrap_or(String::from("2686"));
-    let addr = format!("0.0.0.0:{}", &port)
+    let address: String = env::var("ADDRESS").unwrap_or(String::from("0.0.0.0"));
+    let addr = format!("{}:{}", &address, &port)
         .parse()
         .expect("Invalid server binding address");
 
