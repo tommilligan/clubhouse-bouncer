@@ -30,6 +30,8 @@ impl BouncerConfig {
     /// * `req` - A hyper request
     pub fn validate_bouncer_authorization(&self, req: &hyper::Request<hyper::Body>) -> bool {
         let auth = req.headers().get(hyper::header::AUTHORIZATION);
+        // TODO FIXME remove this dangerous logging after Heroku diagnose
+        trace!("Checking auth header; {:?}", auth);
         match auth {
             Some(a) => self.bouncer_credentials.iter().any(|cred| cred == a),
             None => false,
