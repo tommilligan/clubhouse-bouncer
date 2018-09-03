@@ -23,11 +23,24 @@ cargo install cargo-watch
 cargo watch -x run
 ```
 
-## Test commands
+For tested rust versions, see `.travis.yml`. Docker image rust version is currently `1.26` (alpine `3.8`).
+
+## Use
+
+### Shell scripts
+
+For integration with the API, copy and use the `deployable.sh` script. You will need environment:
+
+- `CLUBHOUSE_BOUNCER_API_KEY=<alphanumeric_secret>`
+- `CLUBHOUSE_BOUNCER_URL=https://<base_hostname>`
+
+Then run `./deployable.sh 1234` where `1234` is a valid ticket number (from a story such as `ch1234`).
+
+### HTTP API
 
 An example use of the app might be to test whether a series of tickets are deployable, such as:
 
 ```
-curl -X GET localhost:2686/deployable -d '{"story_ids":["9812", "9813", "8810", "8812"]}' | jq '.deployable' 
+curl -X GET localhost:2686/deployable -d '{"story_ids":["9812", "9813", "8810", "8812"]}' -H "Authorization: <api_key>" | jq '.deployable'
 ```
 
