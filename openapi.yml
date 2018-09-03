@@ -1,0 +1,123 @@
+openapi: 3.0.0
+info:
+  version: 0.1.0
+  title: clubhouse_bouncer
+  license:
+    name: Apache-2.0
+servers:
+  - url: /
+paths:
+  /deployable:
+    post:
+      summary: Check if a list of tickets is ready for deployment
+      operationId: deployable
+      tags:
+        - deploy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                story_ids:
+                  type: array
+                  items:
+                    type: string
+            example:
+              story_ids:
+                - "1234"
+                - "9876"
+      responses:
+        '200':
+          description: Summary of all requested tickets
+          content:
+            application/json:    
+              schema:
+                $ref: "#/components/schemas/Deployable"
+              example:
+                deplyable: false
+                story_states:
+                  - deployable: true
+                    story:
+                      id: 1234
+                      name: "Document feature spam"
+                      workflow_state_id: 511111118
+                    state:
+                      id: 511111118
+                      name: "Ready for Deploy"
+                  - deployable: false
+                    story:
+                      id: 9876
+                      name: "Fix bug qux"
+                      workflow_state_id: 511111114
+                    state:
+                      id: 511111114
+                      name: "In Development"
+        '401':
+          $ref: "#/components/responses/UnauthorizedError"
+components:
+  responses:
+    UnauthorizedError:
+      description: API key missing or invalid
+      content:
+        text/plain:
+          schema:
+            type: string
+            example: Unauthorized
+  schemas:
+    Story:
+      required:
+        - id
+        - name
+        - workflow_state_id
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        workflow_state_id:
+          type: integer
+          format: int64
+    State:
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+    StoryState:
+      required:
+        - deployable
+        - story
+        - state
+      properties:
+        deployable:
+          type: boolean
+        story:
+          $ref: "#/components/schemas/Story"
+        state:
+          $ref: "#/components/schemas/State"
+    Deployable:
+      required:
+        - deployable
+        - story_states
+      properties:
+        deployable:
+          type: boolean
+        story_states:
+          type: array
+          items:
+            $ref: "#/components/schemas/StoryState"
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+
+security:
+  - ApiKeyAuth: []  
