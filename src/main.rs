@@ -36,7 +36,7 @@ fn worker(
 ) -> impl Future<Item = Response<Body>, Error = hyper::Error> {
     let res = if config.validate_bouncer_authorization(&req) {
         match (req.method(), req.uri().path()) {
-            (&Method::GET, "/deployable") => routes::deployable(req, client, config),
+            (&Method::POST, "/deployable") => routes::deployable(req, client, config),
             _ => routes::not_found(),
         }
     } else {
