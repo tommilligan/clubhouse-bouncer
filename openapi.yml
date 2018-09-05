@@ -29,10 +29,10 @@ paths:
                 - "1234"
                 - "9876"
       responses:
-        '200':
+        "200":
           description: Summary of all requested tickets
           content:
-            application/json:    
+            application/json:
               schema:
                 $ref: "#/components/schemas/Deployable"
               example:
@@ -54,7 +54,7 @@ paths:
                     state:
                       id: 511111114
                       name: "In Development"
-        '401':
+        "401":
           $ref: "#/components/responses/UnauthorizedError"
 components:
   responses:
@@ -120,4 +120,4 @@ components:
       name: Authorization
 
 security:
-  - ApiKeyAuth: []  
+  - ApiKeyAuth: []
