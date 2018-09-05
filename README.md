@@ -61,3 +61,14 @@ An example use of the app might be to test whether a series of tickets are deplo
 curl -X GET localhost:2686/deployable -d '{"story_ids":["9812", "9813", "8810", "8812"]}' -H "Authorization: <api_key>" | jq '.deployable'
 ```
 
+## Docs
+
+Generate openapi documentation as follows:
+
+```
+docker run --rm -v ${PWD}:/local openapitools/openapi-generator-cli generate \                                                                                                                                               ✔ 
+    -i /local/openapi.yml \
+    -l html2 \
+    -o /local/out
+```
+
